@@ -29,6 +29,7 @@ ALLOWED_HOSTS = []
 
 
 # Application definition
+# 安装simpleui后台
 INSTALLED_APPS = [
     'simpleui',
     'django.contrib.admin',
