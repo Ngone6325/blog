@@ -30,5 +30,6 @@ from django.http import HttpResponse
 
 urlpatterns = [
     path("", include(("users.urls", "users"), namespace="users")),
+    path("", include(("home.urls", "home"), namespace="home")),
     path('admin/', admin.site.urls),
 ]

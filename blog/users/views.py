@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, reverse
 from django.views import View
 from django.http import HttpResponseBadRequest, HttpResponse
 from django.http.response import JsonResponse
@@ -69,8 +69,8 @@ class RegisterView(View):
         except DataError as e:
             logger.error(e)
             return HttpResponseBadRequest("注册失败")
-        return HttpResponse("注册成功，重定向到首页")
-
+        # return HttpResponse("注册成功，重定向到首页")
+        return redirect(reverse("home:index"))
 
 class ImageCodeView(View):
 
@@ -148,7 +148,6 @@ class SmsCodeView(View):
 
         # 3.生成短信验证码
         sms_code = "%06d" % randint(0, 999999)
-        print(sms_code)
         logger.info(sms_code)
 
         # 4.将短信验证码保存到redis中
