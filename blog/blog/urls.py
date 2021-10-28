@@ -25,7 +25,7 @@ from django.http import HttpResponse
 # def log(request):
 #     # 记录日志信息
 #     logger.info("info")
-#     return HttpResponse("test")
+#     return HttpResponse("libs")
 
 
 urlpatterns = [
