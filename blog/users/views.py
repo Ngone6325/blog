@@ -4,10 +4,11 @@ from django.http import HttpResponseBadRequest, HttpResponse
 from django.http.response import JsonResponse
 from utils.response_code import RETCODE
 from django_redis import get_redis_connection
+from django.db import DataError
 from libs.captcha import captcha
 from random import randint
 from libs.sms.sms import SmsCode
-# from .models import
+from .models import UserProfile
 import logging
 import re
 
@@ -41,10 +42,10 @@ class RegisterView(View):
         if not all([mobile, passwd, passwd2, sms_code]):
             return HttpResponseBadRequest("缺少必要的参数")
 
-        if re.match(r"^1[3-9]\d{9}$", mobile):
+        if not re.match(r"^1[3-9]\d{9}$", mobile):
             return HttpResponseBadRequest("手机号不符合规则")
 
-        if re.match(r"^[0-9a-zA-Z]{8,20}$", passwd):
+        if not re.match(r"^[0-9a-zA-Z]{8,20}$", passwd):
             return HttpResponseBadRequest("请输入8到20为密码，密码为数字和字母")
 
         if passwd != passwd2:
@@ -59,8 +60,16 @@ class RegisterView(View):
         if sms_code != redis_sms_code.decode():
             return HttpResponseBadRequest("短信验证码不一致")
 
-        # user
-        pass
+        try:
+            user = UserProfile.objects.create(
+                username=mobile,
+                mobile=mobile,
+                password=passwd,
+            )
+        except DataError as e:
+            logger.error(e)
+            return HttpResponseBadRequest("注册失败")
+        return HttpResponse("注册成功，重定向到首页")
 
 
 class ImageCodeView(View):
@@ -139,6 +148,7 @@ class SmsCodeView(View):
 
         # 3.生成短信验证码
         sms_code = "%06d" % randint(0, 999999)
+        print(sms_code)
         logger.info(sms_code)
 
         # 4.将短信验证码保存到redis中
