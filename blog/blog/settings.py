@@ -128,6 +128,9 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static")
 ]
 
+# 替换系统的用户模型
+AUTH_USER_MODEL = "users.UserProfile"
+
 # 配置redis
 CACHES = {
     "default": { # 默认
