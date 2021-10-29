@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'users',
+    'users.apps.UsersConfig',
     "home",
 ]
 
@@ -130,7 +130,7 @@ STATICFILES_DIRS = [
 ]
 
 # 替换系统的用户模型
-AUTH_USER_MODEL = "users.UserProfile"
+AUTH_USER_MODEL = "users.User"
 
 # 配置redis
 CACHES = {

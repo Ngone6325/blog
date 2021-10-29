@@ -1,4 +1,6 @@
 from django.shortcuts import render, redirect, reverse
+from django.contrib.auth import login
+from django.contrib.auth import authenticate
 from django.views import View
 from django.http import HttpResponseBadRequest, HttpResponse
 from django.http.response import JsonResponse
@@ -8,7 +10,7 @@ from django.db import DataError
 from libs.captcha import captcha
 from random import randint
 from libs.sms.sms import SmsCode
-from .models import UserProfile
+from .models import User
 import logging
 import re
 
@@ -35,24 +37,24 @@ class RegisterView(View):
         """
         # 1.接收数据
         mobile = request.POST.get("mobile")
-        passwd = request.POST.get("password")
-        passwd2 = request.POST.get("password2")
+        password = request.POST.get("password")
+        password2 = request.POST.get("password2")
         sms_code = request.POST.get("sms_code")
 
-        if not all([mobile, passwd, passwd2, sms_code]):
+        if not all([mobile, password, password2, sms_code]):
             return HttpResponseBadRequest("缺少必要的参数")
 
         if not re.match(r"^1[3-9]\d{9}$", mobile):
             return HttpResponseBadRequest("手机号不符合规则")
 
-        if not re.match(r"^[0-9a-zA-Z]{8,20}$", passwd):
+        if not re.match(r"^[0-9a-zA-Z]{8,20}$", password):
             return HttpResponseBadRequest("请输入8到20为密码，密码为数字和字母")
 
-        if passwd != passwd2:
+        if password != password2:
             return HttpResponseBadRequest("两次密码不一致")
 
         redis_connection = get_redis_connection()
-        redis_sms_code = redis_connection.get("sms:%s"%mobile)
+        redis_sms_code = redis_connection.get("sms:%s" % mobile)
 
         if redis_sms_code is None:
             return HttpResponseBadRequest("短信验证码已过期")
@@ -61,16 +63,25 @@ class RegisterView(View):
             return HttpResponseBadRequest("短信验证码不一致")
 
         try:
-            user = UserProfile.objects.create(
+            user = User.objects.create_user(
                 username=mobile,
                 mobile=mobile,
-                password=passwd,
+                password=password,
             )
         except DataError as e:
             logger.error(e)
             return HttpResponseBadRequest("注册失败")
+
+        # 状态保持
+        login(request, user)
+
+        response = redirect(reverse("home:index"))
+        response.set_cookie("is_login", True)
+        response.set_cookie("username", user.username, max_age=7 * 24 * 3600)
+
         # return HttpResponse("注册成功，重定向到首页")
-        return redirect(reverse("home:index"))
+        return response
+
 
 class ImageCodeView(View):
 
@@ -160,3 +171,59 @@ class SmsCodeView(View):
             "code": RETCODE.OK,
             "errmsg": "短信验证码发送成功",
         })
+
+
+class LoginView(View):
+
+    def get(self, request):
+        return render(request, "login.html")
+
+    def post(self, request):
+        """
+        1.接收参数
+        2.参数的验证
+            2.1验证手机号是否符合规则
+            2.2验证密码是否符合规则
+        3.用户认证登录
+        4.状态的保持
+        5.根据用户是否记住登录状态来进行判断
+        6.为了首页显示我们需要设置一些cookie信息
+        7.返回响应
+        """
+        # 1.接收参数
+        mobile = request.POST.get("mobile")
+        password = request.POST.get("password")
+        remember = request.POST.get("remember")
+
+        # 判断参数是否齐全
+        if not all([mobile, password]):
+            return HttpResponseBadRequest('缺少必传参数')
+
+        # 2.参数的验证
+        if not re.match(r"1[3-9]\d{9}$", mobile):
+            return HttpResponseBadRequest("手机号不符合规则")
+        if not re.match(r"^[0-9a-zA-Z]{8,20}$", password):
+            return HttpResponseBadRequest("密码不符合规则")
+        # 3.用户认证登录
+        user = authenticate(mobile=mobile, password=password)
+
+        if user is None:
+            return HttpResponseBadRequest("用户名或密码错误")
+        # 4.状态的保持
+        login(request, user)
+
+        # 5.根据用户是否记住登录状态来进行判断
+        # 6.为了首页显示我们需要设置一些cookie信息
+        response = redirect(reverse("home:index"))
+        if remember != "on":
+            request.session.set_expiry(0)
+            response.set_cookie("is_login", True)
+            response.set_cookie("username", user.username, max_age=30 * 24 * 3600)
+        else:
+            # None，过期时间默认为两周
+            request.session.set_expiry(None)
+            response.set_cookie("is_login", True)
+            response.set_cookie("username", user.username, max_age=14 * 24 * 3600)
+
+        # 7.返回响应
+        return response
