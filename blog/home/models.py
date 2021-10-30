@@ -28,16 +28,16 @@ class Article(models.Model):
         related_name="article",
         verbose_name="文章类别"
     )
-    tags = models.CharField(max_length=20, blank=True)
-    title = models.CharField(max_length=100, blank=False, null=False)
-    summary = models.CharField(max_length=200, blank=False, null=False)
+    tags = models.CharField("标签", max_length=20, blank=True)
+    title = models.CharField("标题", max_length=100, blank=False, null=False)
+    summary = models.CharField("文章概要", max_length=200, blank=False, null=False)
+    content = models.TextField("文章内容")
 
-    content = models.TextField()
+    total_views = models.PositiveSmallIntegerField("阅读量", default=0)
+    comments_count = models.PositiveSmallIntegerField("评论数", default=0)
 
-    total_views = models.PositiveSmallIntegerField(default=0)
-    comments_count = models.PositiveSmallIntegerField(default=0)
-    created = models.DateTimeField(default=timezone.now)
-    updated = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField("创建时间", default=timezone.now)
+    updated = models.DateTimeField("更新时间", auto_now=True)
 
     def __str__(self):
         return self.title

@@ -58,6 +58,7 @@
                 <br>
                 <!-- 提交文章的表单 -->
                 <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
                     <!-- 文章标题图 -->
                     <div class="form-group">
                         <label for="avatar">标题图</label>
@@ -92,9 +93,9 @@
                     <!-- 文章摘要 -->
                     <div class="form-group">
                         <!-- 标签 -->
-                        <label for="sumary">文章摘要</label>
+                        <label for="summary">文章摘要</label>
                         <!-- 文本框 -->
-                        <input type="text" class="form-control" id="sumary" name="sumary">
+                        <input type="text" class="form-control" id="summary" name="summary">
                     </div>
                     <!-- 文章正文 -->
                     <div class="form-group">
