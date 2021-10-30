@@ -10,7 +10,8 @@ from django.db import DataError
 from libs.captcha import captcha
 from random import randint
 from libs.sms.sms import SmsCode
-from .models import User
+from users.models import User
+from home.models import ArticleCategory
 import logging
 import re
 
@@ -357,11 +358,18 @@ class UserCenterView(LoginRequiredMixin, View):
         # 返回响应，刷新页面
         response = redirect(reverse("users:center"))
         # 更新cookie信息
-        response.set_cookie("username", user.username, max_age=30*24*3600)
+        response.set_cookie("username", user.username, max_age=30 * 24 * 3600)
         return response
 
 
-class WriteBlogView(View):
+class WriteBlogView(LoginRequiredMixin, View):
 
     def get(self, request):
-        return render(request, "write_blog.html")
+        # 获取博客分类信息
+        categories = ArticleCategory.objects.all()
+        print(categories)
+
+        context = {
+            'categories': categories
+        }
+        return render(request, 'write_blog.html', context=context)
