@@ -47,3 +47,18 @@ class Article(models.Model):
         db_table = "tb_article"
         verbose_name = "文章管理"
         verbose_name_plural = verbose_name
+
+
+class Comment(models.Model):
+    content = models.TextField("评论内容")
+    article = models.ForeignKey(Article, on_delete=models.SET_NULL, null=True, verbose_name="评论文章")
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name="评论用户")
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.article.title
+
+    class Meta:
+        db_table = "tb_comment"
+        verbose_name = "评论管理"
+        verbose_name_plural = verbose_name
