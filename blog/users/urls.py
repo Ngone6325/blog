@@ -7,5 +7,7 @@ urlpatterns = [
     path("smscode/", SmsCodeView.as_view(), name="smscode"),
     path("login/", LoginView.as_view(), name="login"),
     path("logout/", LogoutView.as_view(), name="logout"),
-    path("forgetpassword/", ForgetPasswdView.as_view(), name="forgetpassword")
+    path("forgetpassword/", ForgetPasswdView.as_view(), name="forgetpassword"),
+    path("center/", UserCenterView.as_view(), name="center"),
+    path("writeblog/", WriteBlogView.as_view(), name="writeblog"),
 ]

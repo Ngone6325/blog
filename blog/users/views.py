@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, reverse
-from django.contrib.auth import login, logout
-from django.contrib.auth import authenticate
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
 from django.http import HttpResponseBadRequest, HttpResponse
 from django.http.response import JsonResponse
@@ -214,7 +214,12 @@ class LoginView(View):
 
         # 5.根据用户是否记住登录状态来进行判断
         # 6.为了首页显示我们需要设置一些cookie信息
-        response = redirect(reverse("home:index"))
+        # 根据next参数来进行页面地跳转
+        next_page = request.GET.get("next")
+        if next_page:
+            response = redirect(next_page)
+        else:
+            response = redirect(reverse("home:index"))
         if remember != "on":
             request.session.set_expiry(0)
             response.set_cookie("is_login", True)
@@ -316,3 +321,47 @@ class ForgetPasswdView(View):
         response = redirect(reverse("users:login"))
         # 7.返回响应
         return response
+
+
+# 如果用户没登陆，则会默认跳转到accounts/login/?next=xxx
+class UserCenterView(LoginRequiredMixin, View):
+
+    def get(self, request):
+        user = request.user
+        context = {
+            "username": user.username,
+            "mobile": user.mobile,
+            "avatar": user.avatar.url if user.avatar else None,
+            "user_desc": user.user_desc,
+        }
+        return render(request, "center.html", context=context)
+
+    def post(self, request):
+        # 接收数据
+        user = request.user
+        username = request.POST.get("username", user.username)
+        avatar = request.FILES.get("avatar")
+        user_desc = request.POST.get("desc", user.user_desc)
+
+        # 修改数据库数据
+        try:
+            user.username = username
+            user.user_desc = user_desc
+            if avatar:
+                user.avatar = avatar
+            user.save()
+        except Exception as e:
+            logger.error(e)
+            return HttpResponseBadRequest("更新失败，请稍后再试")
+
+        # 返回响应，刷新页面
+        response = redirect(reverse("users:center"))
+        # 更新cookie信息
+        response.set_cookie("username", user.username, max_age=30*24*3600)
+        return response
+
+
+class WriteBlogView(View):
+
+    def get(self, request):
+        return render(request, "write_blog.html")

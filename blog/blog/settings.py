@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'users.apps.UsersConfig',
-    "home",
+    "home.apps.HomeConfig",
 ]
 
 MIDDLEWARE = [
@@ -126,8 +126,10 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static")
+    os.path.join(BASE_DIR, "static/")
 ]
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
 
 # 替换系统的用户模型
 AUTH_USER_MODEL = "users.User"
@@ -195,3 +197,6 @@ LOGGING = {
         },
     }
 }
+
+# 修改没登录地跳转URL
+LOGIN_URL = "/login/"
